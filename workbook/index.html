@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Оператор Контент-Менеджера — Воркбук</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+    padding-bottom: 200px;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  header { text-align: center; margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid #e2e8f0; }
+  h1 { font-size: 2.2rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+  .subtitle { color: #64748b; font-size: 1.1rem; margin-bottom: 16px; }
+  .meta { display: flex; gap: 24px; justify-content: center; font-size: 0.9rem; color: #94a3b8; flex-wrap: wrap; }
+  .meta span { display: flex; align-items: center; gap: 6px; }
+  .meta svg { width: 16px; height: 16px; fill: none; stroke: #94a3b8; stroke-width: 2; }
+  
+  .badges { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 24px 0; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 0.85rem; font-weight: 500;
+    background: #fff; border: 1px solid #e2e8f0;
+    color: #475569;
+  }
+  .badge.online { color: #059669; border-color: #a7f3d0; background: #f0fdf4; }
+  .badge.offline { color: #7c3aed; border-color: #ddd6fe; background: #faf5ff; }
+  
+  .section { margin-bottom: 48px; padding: 28px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+  .section h2 { font-size: 1.4rem; color: #0f172a; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .section h2 .icon { background: #0f172a; color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  
+  .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .overview-item { padding: 12px 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+  .overview-item .label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+  .overview-item .value { font-size: 1.2rem; font-weight: 600; color: #0f172a; margin-top: 4px; }
+  
+  .modules-list { list-style: none; }
+  .module-group { margin-bottom: 24px; }
+  .module-header { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: #f1f5f9; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
+  .module-header:hover { background: #e2e8f0; }
+  .module-num { background: #0f172a; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+  .module-num.bonus { background: #7c3aed; }
+  .module-info { flex: 1; }
+  .module-info .name { font-weight: 600; color: #0f172a; }
+  .module-info .details { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+  .module-toggle { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; margin-left: auto; }
+  .module-toggle svg { transition: transform 0.2s; }
+  .module-toggle.open svg { transform: rotate(180deg); }
+  
+  .lessons-list { list-style: none; padding-left: 56px; margin-top: 4px; }
+  .lesson-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px; color: #475569; text-decoration: none;
+    font-size: 0.92rem; border-radius: 6px;
+    transition: background 0.15s; margin-bottom: 2px;
+  }
+  .lesson-link:hover { background: #f1f5f9; color: #0f172a; }
+  .lesson-link .lesson-id { color: #94a3b8; font-size: 0.75rem; min-width: 44px; text-align: right; flex-shrink: 0; }
+  .lesson-link:hover .lesson-id { color: #64748b; }
+  
+  .bonus-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .bonus-card {
+    padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    transition: box-shadow 0.15s; text-decoration: none; color: inherit;
+  }
+  .bonus-card:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.08); background: #f1f5f9; }
+  .bonus-card .card-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 8px; }
+  .card-icon.skill { background: #dbeafe; color: #2563eb; }
+  .card-icon.template { background: #dcfce7; color: #16a34a; }
+  .card-icon.presentation { background: #fef3c7; color: #d97706; }
+  .bonus-card .card-title { font-weight: 600; color: #0f172a; margin-bottom: 4px; font-size: 0.95rem; }
+  .bonus-card .card-desc { font-size: 0.8rem; color: #94a3b8; line-height: 1.4; }
+  
+  footer { text-align: center; padding: 32px 20px; color: #94a3b8; font-size: 0.85rem; margin-top: 32px; }
+  footer a { color: #64748b; text-decoration: none; }
+  footer a:hover { color: #0f172a; }
+  
+  @media (max-width: 600px) {
+    .container { padding: 24px 12px; }
+    h1 { font-size: 1.6rem; }
+    .section { padding: 20px; }
+    .badges { flex-direction: column; align-items: center; }
+    .lessons-list { padding-left: 8px; }
+    .lesson-link .lesson-id { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🤖 AI-Оператор Контент-Менеджера</h1>
+  <p class="subtitle">Claude Code с нуля до первых клиентов — воркбук</p>
+  
+  <div class="badges">
+    <span class="badge online">
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      <a href="рабочая-тетрадь.html" style="color: inherit; text-decoration: none;">Открыть тетрадь →</a>
+    </span>
+  </div>
+  
+  <div class="meta">
+    <span>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      50 уроков · 4 ч 17 мин
+    </span>
+    <span>
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 7"/><path d="M21 10v12H3V10"/></svg>
+      8 модулей · 5 бонусов
+    </span>
+    <span>
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+      34 чек-листа
+    </span>
+  </div>
+</header>
+
+<main>
+<section class="section">
+  <h2><span class="icon">📖</span> На чтожды обратить внимание</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 8px;">
+    <div style="padding: 16px; background: #0f172a; color: white; border-radius: 10px; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700;">8</div>
+      <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 4px;">МОДУЛЕЙ</div>
+    </div>
+    <div style="padding: 16px; background: #0f172a; color: white; border-radius: 10px; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700;">50</div>
+      <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 4px;">УРОКОВ</div>
+    </div>
+    <div style="padding: 16px; background: #0f172a; color: white; border-radius: 10px; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700;">34</div>
+      <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 4px;">ЧЕК-ЛИСТА</div>
+    </div>
+    <div style="padding: 16px; background: #0f172a; color: white; border-radius: 10px; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700;">5</div>
+      <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 4px;">БОНУСОВ</div>
+    </div>
+  </div>
+  <p style="color: #64748b; line-height: 1.7; font-size: 0.95rem; margin-top: 16px;">
+    Курс «AI-Оператор Контент-Менеджера» — практический воркбук по использованию Claude Code для автоматизации работы контент-менеджера. Вы научитесь: 
+    настраивать Claude Code под свой стиль, управлять памятью и источниками, создавать витрины, строить конвейер клиентов и закрывать первые сделки.
+  </p>
+  <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 12px;">
+    Каждый модуль начинается с введения (заголовок <code>00_intro.md</code> в папке модуля), далее идут уроки по порядку. Бонусы — отдельные готовые шаблоны.
+  </p>
+</section>
+
+<section class="section">
+  <h2><span class="icon">📚</span> Уроки</h2>
+  <ul class="modules-list" id="modules-list">
+    <!-- Modules will be populated by JavaScript -->
+  </ul>
+</section>
+
+<section class="section">
+  <h2><span class="icon">🎁</span> Бонусы</h2>
+  <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
+    Готовые файлы, которые можно скопировать в свой проект и использовать сразу.
+  </p>
+  <div class="bonus-list" id="bonus-list">
+    <!-- Bonuses will be populated by JavaScript -->
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>Курс не аффилирован с Anthropic, Nous Research или Jack Roberts.</p>
+</footer>
+
+</div>
+
+<script>
+const MODULES = [
+  { id: 'm01', num: '01', name: 'Фундамент: Claude Code как AI-ассистент контент-менеджера', lessons: [
+    { id: 'm01-intro',  num: '00', name: 'Введение в модуль' },
+    { id: 'm01-01-1-устанавливаем-claude-code', num: '1.1', name: 'Устанавливаем Claude Code' },
+    { id: 'm01-01-2-зоны-claude-code-cowork-manage', num: '1.2', name: 'Зоны Claude: code, cowork, manage' },
+    { id: 'm01-01-3-claudemd-ваш-стиль-гайд-как-проектный-документ', num: '1.3', name: 'CLAUDE.md — ваш стиль-гайд как проектный документ' },
+    { id: 'm01-01-4-plan-mode-план-контента-как-требование', num: '1.4', name: 'Plan Mode: план контента как требование' },
+    { id: 'm01-01-5-токены-и-целесообразность-дешево-автоматически', num: '1.5', name: 'Токены и целесообразность: дешево ≠ автоматически' },
+    { id: 'm01-01-6-дебриндинг-источников-откуда-claude-знает', num: '1.6', name: 'Дебриндинг источников: откуда Claude знает?' },
+    { id: 'm01-01-7-git-и-права-файлы-вашего-контента-в-безопасности', num: '1.7', name: 'Git и права: файлы вашего контента в безопасности' },
+    { id: 'm01-01-8-чек-лист-модуля-01-что-вы-должны-уметь', num: '1.8', name: 'Чек-лист модуля 01: что вы должны уметь' }
+  ]},
+  { id: 'm02', num: '02', name: 'Витрина: лендинг-портфолио контент-менеджера', lessons: [
+    { id: 'm02-intro',  num: '00', name: 'Введение в модуль' },
+    { id: 'm02-02-1-система-трёх-шагов-почему-начинаем-не-с-красиво', num: '2.1', name: 'Система трёх шагов: почему начинаем не с «красиво»' },
+    { id: 'm02-02-2-competitor-intel-разведка-5-лендингов', num: '2.2', name: 'Competitor Intel: разведка 5 лендингов' },
+    { id: 'm02-02-3-briefmd-бриф-вашей-витрины', num: '2.3', name: 'BRIEF.md: бриф вашей витрины' },
+    { id: 'm02-02-4-сборка-сайта-с-claude-первый-проход', num: '2.4', name: 'Сборка сайта с Claude (первый проход)' },
+    { id: 'm02-02-5-итерации-правки-стиля-и-структуры-без-переписывания', num: '2.5', name: 'Итерации: правки стиля и структуры без переписывания' },
+    { id: 'm02-02-6-кейсы-и-обезличивание-пока-заглушки-м07-заменит-на-живые', num: '2.6', name: 'Кейсы и обезличивание: пока заглушки (М07 заменит на живые)' },
+    { id: 'm02-02-7-публикация-на-vercel-сайт-в-интернет', num: '2.7', name: 'Публикация на Vercel: сайт в интернет' },
+    { id: 'm02-02-8-чек-лист-модуля-02-ваша-витрина-готова', num: '2.8', name: 'Чек-лист модуля 02: ваша витрина готова' }
+  ]},
+  { id: 'm03', num: '03', name: 'Силами Claude: настраиваем Claude под контент-менеджера', lessons: [
+    { id: 'm03-intro',  num: '00', name: 'Введение в модуль' },
+    { id: 'm03-03-1-skills-с-нуля-специализации-для-claude', num: '3.1', name: 'Skills с нуля: специализации для Claude' },
+    { id: 'm03-03-2-hooks-claude-сам-проверяет-стиль', num: '3.2', name: 'Hooks: Claude сам проверяет стиль' },
+    { id: 'm03-03-3-mcp-сервисы-claude-заходит-в-ваши-инструменты', num: '3.3', name: 'MCP-сервисы: Claude заходит в ваши инструменты' },
+    { id: 'm03-03-4-critic-loop-claude-критикует-текст-а-не-только-пишет', num: '3.4', name: 'Critic loop: Claude критикует текст, а не только пишет' },
+    { id: 'm03-03-5-диспетчер-claude-работает-на-расписание', num: '3.5', name: 'Диспетчер Claude: работает на расписание' },
+    { id: 'm03-03-6-чек-лист-модуля-03-claude-знает-ваш-стиль', num: '3.6', name: 'Чек-лист модуля 03: Claude знает ваш стиль' }
+  ]},
+  { id: 'm04', num: '04', name: 'Память контента: три уровня — где храним всё, что важно', lessons: [
+    { id: 'm04-intro',  num: '00', name: 'Введение в модуль' },
+    { id: 'm04-04-1-три-уровня-памяти-полка-офис-архив', num: '4.1', name: 'Три уровня памяти: полка, офис, архив' },
+    { id: 'm04-04-2-project-память-claudemd-skills-бриф-всё-в-папке', num: '4.2', name: 'Project-память: CLAUDE.md, Skills, бриф — всё в папке' },
+    { id: 'm04-04-3-long-term-память-obsidian-или-аналог-ваш-второй-мозг', num: '4.3', name: 'Long-term память: Obsidian (или аналог) — ваш второй мозг' },
+    { id: 'm04-04-4-notebooklm-или-альтернатива-когда-документов-очень-много', num: '4.4', name: 'NotebookLM (или альтернатива): когда документов очень много' },
+    { id: 'm04-04-5-компас-смысл-векторы-структура-csv-документы-notebooklmobsid', num: '4.5', name: 'Компас «смысл → векторы, структура → CSV, документы → NotebookLM/Obsidian»' },
+    { id: 'm04-04-6-чек-лист-модуля-04-память-работает', num: '4.6', name: 'Чек-лист модуля 04: память работает' }
+  ]},
+  { id: 'm05', num: '05', name: 'AI-оператор Hermes: дежурит по календарю — напоминает, собирает, отчитывается', lessons: [
+    { id: 'm05-intro',  num: '00', name: 'Введение в модуль' },
+    { id: 'm05-05-1-что-такое-hermes-оператор-и-зачем-он-км', num: '5.1', name: 'Что такое Hermes-оператор и зачем он КМ' },
+    { id: 'm05-05-2-структура-оператора-файлы-которые-делают-его-hermes', num: '5.2', name: 'Структура оператора: файлы, которые делают его Hermes' },
+    { id: 'm05-05-3-первая-рутина-утренний-отчёт', num: '5.3', name: 'Первая рутина: утренний отчёт' },
+    { id: 'm05-05-4-подкачка-кейсов-и-аналитика-что-оператор-собирает', num: '5.4', name: 'Подкачка кейсов и аналитика — что оператор собирает' },
+    { id: 'm05-05-5-безопасность-оператора-что-оператор-не-должен-делать', num: '5.5', name: 'Безопасность оператора: что оператор не должен делать' },
+    { id: 'm05-05-6-чек-лист-модуля-05-оператор-работает', num: '5.6', name: 'Чек-лист модуля 05: оператор работает' }
+  ]},
+  { id: 'm06', num: '06', name: 'Конвейер и клиенты: контент-план как конвейер, лидогенерация, пакеты услуг', lessons: [
+    { id: 'm06-intro',  num: '00', name: 'Введение в модуль' },
+    { id: 'm06-06-1-первые-принципы-разбираем-любой-проект-км-по-косточкам', num: '6.1', name: 'Первые принципы: разбираем любой проект КМ по косточкам' },
+    { id: 'm06-06-2-blast-конвейер-сдачи-работы-клиенту', num: '6.2', name: 'BLAST: конвейер сдачи работы клиенту' },
+    { id: 'm06-06-3-пакеты-услуг-контент-менеджмент-как-продукт-не-как-часы', num: '6.3', name: 'Пакеты услуг: контент-менеджмент как продукт, не как часы' },
+    { id: 'm06-06-4-лидогенерация-без-холодных-рассылок-от-аудита-к-сделке', num: '6.4', name: 'Лидогенерация без холодных рассылок: от аудита к сделке' },
+    { id: 'm06-06-5-follow-up-и-crm-без-crm-деньги-лежат-в-дожиме', num: '6.5', name: 'Follow-up и CRM без CRM: деньги лежат в дожиме' },
+    { id: 'm06-06-6-чек-лист-модуля-06-конвейер-работает', num: '6.6', name: 'Чек-лист модуля 06: конвейер работает' }
+  ]},
+  { id: 'm07', num: '07', name: 'Визуал + деньги: дизлайн-режим Claude, безопасность данных, цены, первая сделка', lessons: [
+    { id: 'm07-intro',  num: '00', name: 'Введение в модуль' },
+    { id: 'm07-07-1-claude-code-design-дизайнер-который-сразу-пишет-код', num: '7.1', name: 'Claude Code Design: дизайнер, который сразу пишет код' },
+    { id: 'm07-07-2-презентация-для-клиента-как-показать-результат-до-начала-раб', num: '7.2', name: 'Презентация для клиента: как показать результат до начала работы' },
+    { id: 'm07-07-3-безопасность-данных-клиента-правила-для-км', num: '7.3', name: 'Безопасность данных клиента: правила для КМ' },
+    { id: 'm07-07-4-ценообразование-по-ценности-как-сделать-первый-чек', num: '7.4', name: 'Ценообразование по ценности: как сделать первый чек' },
+    { id: 'm07-07-5-чек-лист-модуля-07-витрина-блестит-конвейер-зарабатывает', num: '7.5', name: 'Чек-лист модуля 07: витрина блестит, конвейер зарабатывает' }
+  ]}
+];
+
+const BONUSES = [
+  { title: 'SKILL.md «мой-тон-км»', desc: 'Навык для Claude, который запоминает ваш стиль: тёплый, живой, без канцелярита, с конкретикой вместо общих слов.', file: '../бонусы/skill-мой-тон-км.md', icon: 'skill' },
+  { title: 'SKILL.md «пост-для-соцсети»', desc: 'Навык, который проверяет пост перед публикацией: одна мысль, конкретика, короткие предложения, эмодзи-акценты, чек-лист перед публикацией.', file: '../бонусы/skill-пост-для-соцсети.md', icon: 'skill' },
+  { title: 'Шаблон кейса', desc: 'Заполните для каждого завершённого проекта. Структура: проблема → решение → цифры. Помечайте данные источниками.', file: '../бонусы/шаблон-кейса.md', icon: 'template' },
+  { title: 'Шаблон BRIEF.md', desc: 'Бриф вашей витрины перед сборкой сайта: целевой посетитель, одно главное действие, секции, техническое, границы.', file: '../бонусы/BRIEF-шаблон.md', icon: 'template' },
+  { title: 'Шаблон клиентской презентации', desc: '5–7 слайдов: проблема клиента → куда двигаем → как работаем → пакет → кейсы → вопросы для клиента.', file: '../бонусы/шаблон-презентации-клиенту.md', icon: 'presentation' }
+];
+
+function renderModules() {
+  const container = document.getElementById('modules-list');
+  MODULES.forEach(mod => {
+    const li = document.createElement('li');
+    li.className = 'module-group';
+    const hasLessons = mod.lessons.length > 1;
+    const lessonCount = hasLessons ? mod.lessons.length - 1 : 0;
+    li.innerHTML = `
+      <div class="module-header" onclick="toggleModule(this)">
+        <div class="module-num">${mod.num}</div>
+        <div class="module-info">
+          <div class="name">${mod.name}</div>
+          <div class="details">${lessonCount} ${lessonCount === 1 ? 'урок' : lessonCount === 2 ? 'урока' : 'уроков'}</div>
+        </div>
+        <button class="module-toggle" onclick="event.stopPropagation(); toggleLessons(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+      </div>
+      <ul class="lessons-list" style="display: none;">
+        ${mod.lessons.map(l => `
+          <li class="lesson-link">
+            <a href="рабочая-тетрадь.html#${l.id}" onclick="scrollToLesson(event, '${l.id}')">${l.name}</a>
+            <span class="lesson-id">${l.num}</span>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+    container.appendChild(li);
+  });
+}
+
+function toggleModule(header) {
+  const group = header.closest('.module-group');
+  const list = group.querySelector('.lessons-list');
+  const toggle = group.querySelector('.module-toggle');
+  const isOpen = list.style.display === 'block';
+  list.style.display = isOpen ? 'none' : 'block';
+  toggle.classList.toggle('open', !isOpen);
+}
+
+function toggleLessons(btn) {
+  const group = btn.closest('.module-group');
+  const list = group.querySelector('.lessons-list');
+  const isOpen = list.style.display === 'block';
+  list.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('open', !isOpen);
+}
+
+function scrollToLesson(event, lessonId) {
+  event.preventDefault();
+  const about = document.querySelector('main');
+  const workbook = window.open('рабочая-тетрадь.html#' + lessonId, '_blank');
+  if (!workbook || workbook.closed || typeof workbook.closed === 'undefined') {
+    // single tab — just navigate
+    window.location.href = 'рабочая-тетрадь.html#' + lessonId;
+  }
+}
+
+function renderBonuses() {
+  const container = document.getElementById('bonus-list');
+  container.innerHTML = BONUSES.map(b => `
+    <div class="bonus-card">
+      <div class="card-icon ${b.icon}">
+        ${b.icon === 'skill' ? '🎯' : b.icon === 'template' ? '📝' : '📊'}
+      </div>
+      <div class="card-title">${b.title}</div>
+      <div class="card-desc">${b.desc}</div>
+      <div style="margin-top: 12px;">
+        <a href="${b.file}" target="_blank" style="font-size: 0.8rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Открыть файл
+        </a>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Initialize
+renderModules();
+renderBonuses();
+
+// Auto-open first module by default
+window.addEventListener('load', function() {
+  const firstToggle = document.querySelector('.module-toggle');
+  if (firstToggle) {
+    setTimeout(() => firstToggle.click(), 100);
+  }
+});
+</script>
+</body>
+</html>
